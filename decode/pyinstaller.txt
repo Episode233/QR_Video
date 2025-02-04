@@ -1,0 +1,16 @@
+dll_path="E:/qr/.venv/Lib/site-packages/pyzbar/"
+
+a = Analysis(
+    ['decode.py'],
+    pathex=[],
+    binaries=[(dll_path+'libiconv.dll','.'),(dll_path+'libzbar-64.dll','.'),],
+    datas=[],
+    hiddenimports=[],
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=[],
+    noarchive=False,
+    optimize=0,
+)
+
