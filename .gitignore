@@ -1,6 +1,9 @@
 decode/build
 decode/dist
+decode/decode.spec
 encode/build
 encode/dist
+encode/encode.spec
 qrcreate/build
 qrcreate/dist
+qrcreate/qrcreate.spec
