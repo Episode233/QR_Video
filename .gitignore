@@ -1,9 +1,13 @@
 decode/build/
 decode/dist/
 decode/decode.spec
+decode/test.py
+
 encode/build/
 encode/dist/
 encode/encode.spec
+encode/test.py
+
 qrcreate/build/
 qrcreate/dist/
 qrcreate/qrgenter.spec
