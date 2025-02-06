@@ -71,7 +71,6 @@ def print_qr(_base64_str_list):
 
 
 def create_qrCode(filePath):
-    print(filePath)
     _, filetype = filePath.split(".")
     filetype = filetype.zfill(4)  # 将文件类型填充到4位
 
