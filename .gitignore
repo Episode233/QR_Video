@@ -11,3 +11,5 @@ encode/test.py
 qrcreate/build/
 qrcreate/dist/
 qrcreate/qrgenter.spec
+
+*/__pycache__/
