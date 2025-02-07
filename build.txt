@@ -1,8 +1,8 @@
 pyinstaller --onefile --windowed decode.py
-
+pyinstaller decode.spec
 
 pyinstaller --onefile --windowed encode.py
-
+pyinstaller encode.spec
 
 pyinstaller --onefile --windowed qrgenter.py
-
+pyinstaller qrgenter.spec
