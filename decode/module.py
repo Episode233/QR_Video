@@ -7,6 +7,8 @@ from pyzbar.pyzbar import decode
 import numpy as np
 import  cv2
 import base64
+
+
 def v2i(video_path):
     image_list=[]
 
@@ -22,7 +24,7 @@ def v2i(video_path):
             # cv2.imwrite(image_path, frame)  # 保存图像
             frame_count += 1
             image_list.append(frame)
-            
+
             print(str(frame_count)+"分割完毕")
 
     cap.release()  # 释放视频捕获对象
@@ -58,9 +60,10 @@ def find_purple_bounds(image):
 
     if found_purple:
         return left, top, right, bottom
-    
+
     else:
         return None
+
 
 def split_image(image, rows=2, cols=4):
     """
@@ -73,105 +76,106 @@ def split_image(image, rows=2, cols=4):
     row_height = height // rows
     col_width = width // cols
     return [image[i*row_height:(i+1)*row_height,j*col_width: (j+1)*col_width,:] for i in range(rows) for j in range(cols)]
-def decode_list(image_list,outfold):
+
+
+def decode_list(image_list, outfold):
     """
     遍历文件夹中的所有二维码图片，解码，并将结果写入指定的输出文件。
     """
     decoded_results = {}
-    ih,iw,_=image_list[0].shape
-    masize=8#一张图8张二维码
+    ih, iw, _ = image_list[0].shape
+    masize = 8  # 一张图8张二维码
     # sizew=int(iw*0.03)
     # sizeh=int(ih*0.02)
-    sizew=int(iw*0)
-    sizeh=int(ih*0)
-    bounds=(sizeh,sizew,ih-sizeh,iw-sizew)
+    sizew = int(iw * 0)
+    sizeh = int(ih * 0)
+    bounds = (sizeh, sizew, ih - sizeh, iw - sizew)
     # bounds=None
-    iter=-1#每1000张一次迭代
-    flag=1#表示是否修改迭代次数
+    iter = -1  # 每1000张一次迭代
+    flag = 1  # 表示是否修改迭代次数
     for i in range(len(image_list)):
-        image_id=None
-        code_8={}
+        image_id = None
+        code_8 = {}
         # image = Image.open(image_path)
-        image=image_list[i]
-        if bounds==None:
-                bounds = find_purple_bounds(image)  # 获取紫色区域位置信息
-                # print(bounds)
-                
-        if bounds:
-                y0, x0, y1, x1 = bounds  # 解包位置信息
-                purple_area = image[y0:y1,x0:x1,:]
-             
-                split_images = split_image(purple_area)
-                if i==0:
-                    for img in range(len(split_images)):
-                        cv2.imwrite(outfold+"/test_{}.png".format(img),split_images[img] )
-                        # split_images[img].save(outfold+"/test_{}.png".format(img))
-                for idx, img_part in enumerate(split_images):
-                     
-                     decoded = decode(img_part)
-                     
-                     if(len(decoded)==0 or len(decoded[0].data.decode('utf-8'))<400):
-                         continue
-                     else:
-                         decodetxt=decoded[0].data.decode('utf-8')[3:]
-                         
-                         image_id=int(decoded[0].data.decode('utf-8')[:3])
-                         code_8[idx]=decodetxt
+        image = image_list[i]
+        if bounds == None:
+            bounds = find_purple_bounds(image)  # 获取紫色区域位置信息
+            # print(bounds)
 
-                         
-                        #  print(decoded[0].data.decode('utf-8'))
-                        #  print(len(decoded_results),int(image_id),idx)
-                         if(image_id!=None):
-                            if(int(image_id )==0):
-                                iter=-1
-                                flag=1
-                            elif int(image_id )<10 and flag==1:
-                                iter+=1
-                                flag=0
-                                image_id=999*iter+image_id
-                            elif int(image_id) >990 and flag==0:#末尾修正flag，保证只在头部进行iter+1
-                                flag=1
-                                image_id=999*iter+image_id
-                            else:
-                                image_id=999*iter+image_id
-                         if(int(image_id) in decoded_results and len(decoded_results[int(image_id)])==8):
-                             break
-                if(image_id!=None):
-                    
-                    if(int(image_id )==25):
-                        for img in range(len(split_images)):
-                            cv2.imwrite(outfold+"/test1001_{}.png".format(img),split_images[img] )
-                    if(int(image_id) not in decoded_results):
-                        
-                        decoded_results[int(image_id)]=code_8
-                    else:
-                        if(len(decoded_results[int(image_id)])<8):
-                            print(int(image_id))
-                            for index in range(8):
-                                if (index not in decoded_results[int(image_id)] and index in code_8):
-                                    decoded_results[int(image_id)][index]=code_8[index]
-                    if(len(decoded_results[int(image_id)])==8):
-                        print(f"识别成功{int(image_id)}")
-    sunum=0
-    index=0             
-    unsulist=[]     
+        if bounds:
+            y0, x0, y1, x1 = bounds  # 解包位置信息
+            purple_area = image[y0:y1, x0:x1, :]
+
+            split_images = split_image(purple_area)
+            if i == 0:
+                for img in range(len(split_images)):
+                    cv2.imwrite(outfold + "/test_{}.png".format(img), split_images[img])
+                    # split_images[img].save(outfold+"/test_{}.png".format(img))
+            for idx, img_part in enumerate(split_images):
+
+                decoded = decode(img_part)
+
+                if (len(decoded) == 0 or len(decoded[0].data.decode('utf-8')) < 400):
+                    continue
+                else:
+                    decodetxt = decoded[0].data.decode('utf-8')[3:]
+
+                    image_id = int(decoded[0].data.decode('utf-8')[:3])
+                    code_8[idx] = decodetxt
+
+                    #  print(decoded[0].data.decode('utf-8'))
+                    #  print(len(decoded_results),int(image_id),idx)
+                    if (image_id != None):
+                        if (int(image_id) == 0):
+                            iter = -1
+                            flag = 1
+                        elif int(image_id) < 10 and flag == 1:
+                            iter += 1
+                            flag = 0
+                            image_id = 999 * iter + image_id
+                        elif int(image_id) > 990 and flag == 0:  # 末尾修正flag，保证只在头部进行iter+1
+                            flag = 1
+                            image_id = 999 * iter + image_id
+                        else:
+                            image_id = 999 * iter + image_id
+                    if (int(image_id) in decoded_results and len(decoded_results[int(image_id)]) == 8):
+                        break
+            if (image_id != None):
+
+                if (int(image_id) == 25):
+                    for img in range(len(split_images)):
+                        cv2.imwrite(outfold + "/test1001_{}.png".format(img), split_images[img])
+                if (int(image_id) not in decoded_results):
+
+                    decoded_results[int(image_id)] = code_8
+                else:
+                    if (len(decoded_results[int(image_id)]) < 8):
+                        print(int(image_id))
+                        for index in range(8):
+                            if (index not in decoded_results[int(image_id)] and index in code_8):
+                                decoded_results[int(image_id)][index] = code_8[index]
+                if (len(decoded_results[int(image_id)]) == 8):
+                    print(f"识别成功{int(image_id)}")
+    sunum = 0
+    index = 0
+    unsulist = []
     for image in decoded_results:
-        if(len(decoded_results[image])==8):
-            print(f"第{index+1}张识别成功,共{len(decoded_results)}张图像,共识别成功{sunum+1}张")
-            sunum+=1
+        if (len(decoded_results[image]) == 8):
+            print(f"第{index + 1}张识别成功,共{len(decoded_results)}张图像,共识别成功{sunum + 1}张")
+            sunum += 1
         else:
-            unsulist.append(index+1)
-        index+=1
-    if(sunum==index or sunum==index-1):
+            unsulist.append(index + 1)
+        index += 1
+    if (sunum == index or sunum == index - 1):
         print("完全识别成功")
     else:
         for i in unsulist:
             print(f"第{i}张识别失败")
     return decoded_results
-    
-  
 
-def write_file(textdict,outputflod,fd):    
+
+
+def write_file(textdict,outputflod,fd):
     str=""
     for i in range(len(textdict)):
         for image in range(len(textdict[i])):
@@ -193,7 +197,7 @@ def write_file(textdict,outputflod,fd):
         str+="=="
     elif(len(str)%4==1):
         str+="==="
-    
+
 
     outfile=outputflod+"/decode{}.".format(int(fd))+filetype
     str=str[4:]
@@ -203,5 +207,5 @@ def write_file(textdict,outputflod,fd):
 
 
 
-    
+
 
