@@ -15,6 +15,7 @@ from pathlib import Path
 import cv2
 from PIL import Image
 from concurrent.futures import ProcessPoolExecutor
+from cimbar.cimbar import encode
 
 chunk_size = 30 * 30
 outPath = 'outPut'
@@ -28,66 +29,69 @@ qrMaxSizeDic = {
 
 
 
-def print_qr(_base64_str_list):
-    # 循环生成二维码图片
-    error_correction_1 = qrcode.constants.ERROR_CORRECT_M
+# def print_qr(_base64_str_list):
+#     # 循环生成二维码图片
+#     error_correction_1 = qrcode.constants.ERROR_CORRECT_M
+#
+#     imgNums = 0
+#     startSize = 0
+#     maxSize = 800 - 3  # 留三位用于编码位置顺序
+#     endSize = len(_base64_str_list)
+#     imgsize = 8  # 每张图像中存放二维码的数量
+#     image_list = []
+#     while True:
+#         if startSize >= endSize:
+#             break
+#         if (imgNums <= 7):
+#             imgindex = 0
+#         else:
+#             imgindex = (imgNums - 8) // imgsize % 999 + 1  # 一张图的八张二维码编码一致，1000张图之后重新清零
+#
+#         _in_str_list = "{:03}".format(imgindex)
+#         if startSize + maxSize + 3 > endSize:
+#             lensize = startSize + maxSize + 3 - endSize
+#             _in_str_list += _base64_str_list[startSize:endSize]
+#             for t in range(lensize):
+#                 _in_str_list += "="
+#         else:
+#
+#             _in_str_list += _base64_str_list[startSize:maxSize + startSize]
+#         qr = qrcode.QRCode(version=10,
+#                            error_correction=error_correction_1,
+#                            border=4,
+#                            box_size=10)
+#
+#         qr.add_data(_in_str_list)
+#         img = qr.make_image()  # 2维
+#         # img = qr.make_image(fill_color="rgb(242,123,0)", back_color="white")
+#         image_list.append(img)
+#         imgNums = imgNums + 1
+#         startSize = startSize + maxSize
+#         print(f"第{imgNums}张二维码已生成")
+#     return image_list
 
-    imgNums = 0
-    startSize = 0
-    maxSize = 800 - 3  # 留三位用于编码位置顺序
-    endSize = len(_base64_str_list)
-    imgsize = 8  # 每张图像中存放二维码的数量
-    image_list = []
-    while True:
-        if startSize >= endSize:
-            break
-        if (imgNums <= 7):
-            imgindex = 0
-        else:
-            imgindex = (imgNums - 8) // imgsize % 999 + 1  # 一张图的八张二维码编码一致，1000张图之后重新清零
 
-        _in_str_list = "{:03}".format(imgindex)
-        if startSize + maxSize + 3 > endSize:
-            lensize = startSize + maxSize + 3 - endSize
-            _in_str_list += _base64_str_list[startSize:endSize]
-            for t in range(lensize):
-                _in_str_list += "="
-        else:
-
-            _in_str_list += _base64_str_list[startSize:maxSize + startSize]
-        qr = qrcode.QRCode(version=10,
-                           error_correction=error_correction_1,
-                           border=4,
-                           box_size=10)
-
-        qr.add_data(_in_str_list)
-        img = qr.make_image()  # 2维
-        # img = qr.make_image(fill_color="rgb(242,123,0)", back_color="white")
-        image_list.append(img)
-        imgNums = imgNums + 1
-        startSize = startSize + maxSize
-        print(f"第{imgNums}张二维码已生成")
-    return image_list
-
+# def create_qrCode(filePath):
+#     _, filetype = filePath.split(".")
+#     filetype = filetype.zfill(4)  # 将文件类型填充到4位
+#
+#     def read_in_chunks(file_object, chunk_size=1024):
+#         while True:
+#             data = file_object.read(chunk_size)
+#             if not data:
+#                 break
+#             yield data
+#
+#     with open(filePath, "rb") as file:
+#         data = filetype + base64.b64encode(b''.join(read_in_chunks(file))).decode("utf-8")
+#
+#     imagelist = print_qr(data)
+#
+#     return imagelist
 
 def create_qrCode(filePath):
-    _, filetype = filePath.split(".")
-    filetype = filetype.zfill(4)  # 将文件类型填充到4位
-
-    def read_in_chunks(file_object, chunk_size=1024):
-        while True:
-            data = file_object.read(chunk_size)
-            if not data:
-                break
-            yield data
-
-    with open(filePath, "rb") as file:
-        data = filetype + base64.b64encode(b''.join(read_in_chunks(file))).decode("utf-8")
-
-    imagelist = print_qr(data)
-
+    imagelist = encode(filePath)
     return imagelist
-
 
 def pingjie(imagelist):
     # 大图片尺寸
