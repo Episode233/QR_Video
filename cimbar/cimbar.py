@@ -30,6 +30,7 @@ Options:
   --deskew=<0-2>                   Deskew level. 0 is no deskew. Should usually be 0 or default. [default: 1]
   --preprocess=<0,1>               Sharpen image before decoding. Default is to guess. [default: -1]
 """
+import os
 from collections import defaultdict
 from io import BytesIO
 from os import path
@@ -100,12 +101,10 @@ class BlockEncoderStream:
             return b''
 
         index = str(self.current_frame).zfill(8).encode('ascii')
-        print(index)
         block = index
 
         # 首先写入文件类型标识
         if not self._type_written:
-            print('not type written')
             self._type_written = True
             block += self.file_type
             remaining_size = self.file_size - len(block)
@@ -673,26 +672,27 @@ def decode(src_images, outfile, dark=True, ecc=conf.ECC, fountain=False, force_p
 
 
 def _get_image_template(width, dark):
+    bitmap_path = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'bitmap'))
     color = (0, 0, 0) if dark else (255, 255, 255)
     img = Image.new('RGB', (width, width), color=color)
 
     suffix = 'dark' if dark else 'light'
-    anchor = Image.open(f'bitmap/anchor-{suffix}.png')
-    anchor_br = Image.open(f'bitmap/anchor-secondary-{suffix}.png')
+    anchor = Image.open(os.path.join(bitmap_path, f"anchor-{suffix}.png"))
+    anchor_br = Image.open(os.path.join(bitmap_path, f"anchor-secondary-{suffix}.png"))
     aw, ah = anchor.size
     img.paste(anchor, (0, 0))
     img.paste(anchor, (0, width-ah))
     img.paste(anchor, (width-aw, 0))
     img.paste(anchor_br, (width-aw, width-ah))
 
-    horizontal_guide = Image.open(f'bitmap/guide-horizontal-{suffix}.png')
+    horizontal_guide = Image.open(os.path.join(bitmap_path, f"guide-horizontal-{suffix}.png"))
     gw, _ = horizontal_guide.size
     img.paste(horizontal_guide, (width//2 - gw//2, 2))
     img.paste(horizontal_guide, (width//2 - gw//2, width-4))
     img.paste(horizontal_guide, (width//2 - gw - gw//2, width-4))  # long bottom guide
     img.paste(horizontal_guide, (width//2 + gw - gw//2, width-4))  # ''
 
-    vertical_guide = Image.open(f'bitmap/guide-vertical-{suffix}.png')
+    vertical_guide = Image.open(os.path.join(bitmap_path, f"guide-vertical-{suffix}.png"))
     _, gh = vertical_guide.size
     img.paste(vertical_guide, (2, width//2 - gw//2))
     img.paste(vertical_guide, (width-4, width//2 - gw//2))
@@ -759,24 +759,21 @@ def encode_iter(src_data, ecc, fountain):
         print(f'encoded {frame_num} frames')
 
 
-def encode(src_data, dst_image, dark=True, ecc=conf.ECC, fountain=False):
-    def save_frame(img, frame):
-        if img:
-            name = f'{dst_image}.{frame+1}.png'
-            img.save(name)
-
+def encode(src_data, dark=True, ecc=conf.ECC, fountain=False):
     img = None
     frame = None
+    imagelist = []
     ct = CimbEncoder(dark, symbol_bits=conf.BITS_PER_SYMBOL, color_bits=BITS_PER_COLOR)
     for bits, x, y, frame_num in encode_iter(src_data, ecc, fountain):
         if frame != frame_num:  # save
-            save_frame(img, frame)
+            if img is not None:
+                imagelist.append(img)
             img = _get_image_template(conf.TOTAL_SIZE, dark)
             frame = frame_num
-
         encoded = ct.encode(bits)
         img.paste(encoded, (x, y))
-    save_frame(img, frame)
+    imagelist.append(img)
+    return imagelist
 
 
 def main():
