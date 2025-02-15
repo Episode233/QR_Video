@@ -619,7 +619,7 @@ def decode_iter(src_image, dark, should_preprocess, color_correct, deskew, auto_
             pass
 
 
-def decode(src_images, outfile, dark=False, ecc=conf.ECC, fountain=False, force_preprocess=False, color_correct=False,
+def decode(src_images, outfile, dark=True, ecc=conf.ECC, fountain=False, force_preprocess=False, color_correct=False,
            deskew=True, auto_dewarp=False):
     cells, _ = cell_positions(conf.CELL_SPACING_X, conf.CELL_SPACING_Y, conf.CELL_DIM_X, conf.CELL_DIM_Y,
                               conf.CELLS_OFFSET, conf.MARKER_SIZE_X, conf.MARKER_SIZE_Y)
@@ -759,7 +759,7 @@ def encode_iter(src_data, ecc, fountain):
         print(f'encoded {frame_num} frames')
 
 
-def encode(src_data, dst_image, dark=False, ecc=conf.ECC, fountain=False):
+def encode(src_data, dst_image, dark=True, ecc=conf.ECC, fountain=False):
     def save_frame(img, frame):
         if img:
             name = f'{dst_image}.{frame+1}.png'
