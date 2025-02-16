@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from tempfile import TemporaryDirectory
+
 import cv2
 #pip install Pillow pyzbar
 import os
@@ -176,7 +178,7 @@ def split_image(image, rows=2, cols=4):
 
 def decode_list(image_list, outfold):
     """
-    遍历文件夹中的所有二维码图片，解码，并将结果写入指定的输出文件。
+    遍历文件夹中的所有二维码图片，解码，可以将结果写入指定的输出文件。
     """
     decoded_list = []
     decoded_results = {}
@@ -200,43 +202,36 @@ def decode_list(image_list, outfold):
             split_images = split_image(purple_area)
             decoded_list.extend(split_images)
 
-    for img in decoded_list:
-        content = decode(img)
-
+    # 创建一个临时目录
+    with TemporaryDirectory() as temp_dir:
+        for i, img in enumerate(decoded_list):
+            try:
+                # 为每个图像创建唯一的临时文件路径
+                temp_img_path = os.path.join(temp_dir, f'temp_{i}.png')
+                # 保存numpy数组为图像文件
+                cv2.imwrite(temp_img_path, img)
+                # 解码临时文件
+                decoded_img = decode(temp_img_path)
+                index = int(decoded_img[:8])
+                content = decoded_img[8:]
+                if index not in decoded_results:
+                    decoded_results[index] = content
+            except:
+                continue
 
     return decoded_results
 
 
-def write_file(textdict,outputflod,fd):
-    str=""
-    for i in range(len(textdict)):
-        for image in range(len(textdict[i])):
-            str+=textdict[i][image]
-    filetype=str[:4]
-    while(True):
-        if(filetype[0]=="0"):
-            filetype=filetype[1:]
-        else:
-            break
-    while(True):
-        if(str[-1]=="="):
-            str=str[:-1]
-        else:
-            break
-    if(len(str)%4==3):
-        str+="="
-    elif(len(str)%4==2):
-        str+="=="
-    elif(len(str)%4==1):
-        str+="==="
+def write_file(bytes_dict,output_folder,fd):
+    result = bytes()
+    for i in range(len(bytes_dict)):
+        result += bytes_dict[i]
+    filetype = result[:4].decode('utf-8').lstrip('0')
+    content = result[4:]
 
-
-    outfile=outputflod+"/decode{}.".format(int(fd))+filetype
-    str=str[4:]
-    with open(outfile,"wb") as img:
-        img.write(base64.b64decode(str))
-
-
+    file_path = os.path.join(output_folder, f"file.{filetype}")
+    with open(file_path, "wb") as f:
+        f.write(content)
 
 
 

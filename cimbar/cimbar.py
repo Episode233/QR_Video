@@ -163,13 +163,12 @@ class BlockEncoderStream:
 class BlockDecoderStream:
     """用于大文件分块解码的类"""
 
-    def __init__(self, f, block_size, ecc):
-        self.f = f
+    def __init__(self, block_size, ecc):
         self.block_size = block_size
         self.ecc = ecc
         self._closed = False
         self._write_time = 0
-        self._content = None
+        self._content = bytes()
 
 
         # 使用与编码器相同的参数
@@ -186,7 +185,7 @@ class BlockDecoderStream:
             for _ in range(num_rs_blocks):
                 self.rsc_list.append(RSCodec(ecc, nsize=self.rs_block_size, fcr=1, prim=0x187))
 
-        # 记录实际写入的数据大小
+        # 记录实际的数据大小
         self.total_data_size = None
         self.current_data_size = 0
 
@@ -194,17 +193,16 @@ class BlockDecoderStream:
         self._write_time += 1
 
         if self._closed:
-            raise ValueError("I/O operation on closed file")
+            raise ValueError("I/O operation on closed stream")
 
         if not data or len(data) == 0:
             return
 
         if not self.rsc_list:
-            # 如果没有启用ECC，直接写入数据
+            # 如果没有启用ECC，直接存储数据
             valid_data = data.rstrip(b'\0')
             if valid_data and (self.total_data_size is None or
                                self.current_data_size + len(valid_data) <= self.total_data_size):
-                self.f.write(valid_data)
                 self.current_data_size += len(valid_data)
             return
 
@@ -242,7 +240,6 @@ class BlockDecoderStream:
                         # 如果还需要写入数据，去掉末尾的零
                         to_write = decoded_data[:remaining].rstrip(b'\0')
                         if to_write:
-                            self.f.write(to_write)
                             self.current_data_size += len(to_write)
                 else:
                     # 如果不知道总大小，写入所有非零数据
@@ -251,9 +248,7 @@ class BlockDecoderStream:
                         self._content = to_write
                     if self._write_time == 2:
                         self._content += to_write
-                        self._content = self._content.decode('utf-8')
                     if to_write:
-                        self.f.write(to_write)
                         self.current_data_size += len(to_write)
 
         except Exception as e:
@@ -264,9 +259,7 @@ class BlockDecoderStream:
         return self._closed
 
     def close(self):
-        if not self._closed:
-            self.f.close()
-            self._closed = True
+        self._closed = True
 
     def __enter__(self):
         return self
@@ -455,22 +448,9 @@ def _preprocess_for_decode(img):
     return img
 
 
-def _get_decoder_stream(outfile, ecc, fountain):
-    # set up the outstream: image -> reedsolomon -> fountain -> zstd_decompress -> raw bytes
-    f = open(outfile, 'wb')
-    if fountain:
-        import zstandard as zstd
-        from cimbar.fountain.fountain_decoder_stream import fountain_decoder_stream
-        decompressor = zstd.ZstdDecompressor().stream_writer(f)
-        f = fountain_decoder_stream(decompressor, _fountain_chunk_size(ecc))
-    # on_rss_failure = b'' if fountain else None
-    # stream = reed_solomon_stream(f, ecc, conf.ECC_BLOCK_SIZE, mode='write', on_failure=on_rss_failure) if ecc else f
-    # fount = f if fountain else None
-    # return stream, fount
-    else:
-        # 新的分块处理逻辑
-        block_size = capacity()
-        f = BlockDecoderStream(f, block_size, ecc)
+def _get_decoder_stream(ecc, fountain):
+    block_size = capacity()
+    f = BlockDecoderStream(block_size, ecc)
 
     return f, None
 
@@ -620,12 +600,14 @@ def decode_iter(src_image, dark, should_preprocess, color_correct, deskew, auto_
             pass
 
 
-def decode(src_images, outfile, dark=True, ecc=conf.ECC, fountain=False, force_preprocess=False, color_correct=False,
+def decode(src_images, dark=True, ecc=conf.ECC, fountain=False, force_preprocess=False, color_correct=False,
            deskew=True, auto_dewarp=False):
+    if isinstance(src_images, str):
+        src_images = [src_images]
     cells, _ = cell_positions(conf.CELL_SPACING_X, conf.CELL_SPACING_Y, conf.CELL_DIM_X, conf.CELL_DIM_Y,
                               conf.CELLS_OFFSET, conf.MARKER_SIZE_X, conf.MARKER_SIZE_Y)
     interleave_lookup, block_size = interleave_reverse(cells, conf.INTERLEAVE_BLOCKS, conf.INTERLEAVE_PARTITIONS)
-    dstream, fount = _get_decoder_stream(outfile, ecc, fountain)
+    dstream, fount = _get_decoder_stream(ecc, fountain)
     dupe_stream = dupe_pass = None
     if color_correct >= 3 and not fount:
         dupe_stream, fount = _get_decoder_stream('/dev/null', ecc, True)
@@ -667,12 +649,10 @@ def decode(src_images, outfile, dark=True, ecc=conf.ECC, fountain=False, force_p
                 iw.write(bits, block)
                 if dupe_pass:
                     dupe_pass.write(bits, block)
-
-            # flush iw
             with iw:
                 pass
-    print('------------------------------------------')
-    print(outstream.get_content())
+
+    return outstream.get_content()
 
 def _get_image_template(width, dark):
     bitmap_path = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'bitmap'))

@@ -156,10 +156,10 @@ def img2vedio(image_list, video_path):
         video.write(new_imagelist[0])
     for image in new_imagelist[:]:
         video.write(image)
-    for i in range(10):
-        video.write(new_imagelist[0])
-    for image in new_imagelist[:]:
-        video.write(image)
+    # for i in range(10):
+    #     video.write(new_imagelist[0])
+    # for image in new_imagelist[:]:
+    #     video.write(image)
 
     cv2.destroyAllWindows()
     video.release()

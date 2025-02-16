@@ -28,12 +28,12 @@ class Decoder(QMainWindow, Ui_filedecoder):
             print(f"v2i 执行时间: {end_time - start_time:.4f} 秒")
 
             start_time = time.time()
-            textdict = decode_list(imagelist, self.outputflod)
+            bytes_dict = decode_list(imagelist, self.outputflod)
             end_time = time.time()
             print(f"decode_list 执行时间: {end_time - start_time:.4f} 秒")
 
             start_time = time.time()
-            write_file(textdict, self.outputflod, 0)
+            write_file(bytes_dict, self.outputflod, 0)
             end_time = time.time()
             print(f"write_file 执行时间: {end_time - start_time:.4f} 秒")
 
