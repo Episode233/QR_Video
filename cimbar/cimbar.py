@@ -68,7 +68,7 @@ class BlockEncoderStream:
         ext = filename.split('.')[-1] if '.' in filename else ''
         self.file_type = ext.zfill(4).encode('ascii')  # 添加 0 前缀并补齐到 4 字符
 
-        self.file_size = f.seek(0, 2) + len(self.file_type)  # 获取文件大小
+        self.file_size = f.seek(0, 2)  # 获取文件大小
         f.seek(0)  # 重置文件指针
         self.current_pos = 0
         self._closed = False
@@ -84,7 +84,7 @@ class BlockEncoderStream:
         self.frame_data_size = num_rs_blocks * self.data_block_size - 8  # 减去索引大小
 
         # 计算总共需要的帧数（向上取整）
-        self.total_frames = (self.file_size + self.frame_data_size - 1) // self.frame_data_size
+        self.total_frames = (self.file_size + len(self.file_type) + self.frame_data_size - 1) // self.frame_data_size
         self.current_frame = 0
 
         # 初始化Reed-Solomon编码器列表
@@ -107,7 +107,7 @@ class BlockEncoderStream:
         if not self._type_written:
             self._type_written = True
             block += self.file_type
-            remaining_size = self.file_size - len(block)
+            remaining_size = self.file_size
             data_to_read = min(self.frame_data_size - len(self.file_type), remaining_size)
             block += self.f.read(data_to_read)
         else:
@@ -252,7 +252,6 @@ class BlockDecoderStream:
                     if self._write_time == 2:
                         self._content += to_write
                         self._content = self._content.decode('utf-8')
-                        print(self._content)
                     if to_write:
                         self.f.write(to_write)
                         self.current_data_size += len(to_write)
@@ -271,6 +270,9 @@ class BlockDecoderStream:
 
     def __enter__(self):
         return self
+
+    def get_content(self):
+        return self._content
 
     def __exit__(self, type, value, traceback):
         self.close()
@@ -669,7 +671,8 @@ def decode(src_images, outfile, dark=True, ecc=conf.ECC, fountain=False, force_p
             # flush iw
             with iw:
                 pass
-
+    print('------------------------------------------')
+    print(outstream.get_content())
 
 def _get_image_template(width, dark):
     bitmap_path = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'bitmap'))
