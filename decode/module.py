@@ -227,7 +227,8 @@ def write_file(bytes_dict,output_folder,fd):
     for i in range(len(bytes_dict)):
         result += bytes_dict[i]
     filetype = result[:4].decode('utf-8').lstrip('0')
-    content = result[4:]
+    padding = int(result[4:8].decode('utf-8'))
+    content = result[8:len(result) - padding]
 
     file_path = os.path.join(output_folder, f"file.{filetype}")
     with open(file_path, "wb") as f:

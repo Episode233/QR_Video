@@ -69,11 +69,13 @@ class BlockEncoderStream:
         self.file_type = ext.zfill(4).encode('ascii')  # 添加 0 前缀并补齐到 4 字符
 
         self.file_size = f.seek(0, 2)  # 获取文件大小
+        print(self.file_size)
         f.seek(0)  # 重置文件指针
         self.current_pos = 0
         self._closed = False
         self._type_written = False  # 标记是否已写入文件类型
         self._index_written = False  # 标记是否已写入索引
+        self._padding_written = False  # 标记是否已写入填充
 
         # 计算RS参数
         self.rs_block_size = conf.ECC_BLOCK_SIZE
@@ -84,8 +86,11 @@ class BlockEncoderStream:
         self.frame_data_size = num_rs_blocks * self.data_block_size - 8  # 减去索引大小
 
         # 计算总共需要的帧数（向上取整）
-        self.total_frames = (self.file_size + len(self.file_type) + self.frame_data_size - 1) // self.frame_data_size
+        self.total_frames = (self.file_size + len(self.file_type) + 4 + self.frame_data_size - 1) // self.frame_data_size
         self.current_frame = 0
+
+        # 记录填充\0的字节数
+        self.file_padding = str(self.frame_data_size * self.total_frames - self.file_size - len(self.file_type) - 4).zfill(4).encode('ascii')
 
         # 初始化Reed-Solomon编码器列表
         self.rsc_list = []
@@ -103,12 +108,14 @@ class BlockEncoderStream:
         index = str(self.current_frame).zfill(8).encode('ascii')
         block = index
 
-        # 首先写入文件类型标识
-        if not self._type_written:
+        # 首先写入文件类型标识、填充\0字节数
+        if not self._type_written and not self._padding_written:
             self._type_written = True
+            self._padding_written = True
             block += self.file_type
+            block += self.file_padding
             remaining_size = self.file_size
-            data_to_read = min(self.frame_data_size - len(self.file_type), remaining_size)
+            data_to_read = min(self.frame_data_size - len(self.file_type) - 4, remaining_size)
             block += self.f.read(data_to_read)
         else:
             # 读取这一帧需要的实际数据量
@@ -243,7 +250,7 @@ class BlockDecoderStream:
                             self.current_data_size += len(to_write)
                 else:
                     # 如果不知道总大小，写入所有非零数据
-                    to_write = decoded_data.rstrip(b'\0')
+                    to_write = decoded_data
                     if self._write_time == 1:
                         self._content = to_write
                     if self._write_time == 2:
