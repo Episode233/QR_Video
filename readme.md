@@ -40,9 +40,12 @@
 4. pdf文件
    ![pdf.png](/img/pdf.png)
 
-## 预览编码视频
+## 预览编码结果
 
-![encoded.gif](/img/encoded.gif)
+1. 编码结果图片
+   ![encoded.png](/img/encoded.png)
+2. 编码结果视频
+   ![encoded.gif](/img/encoded.gif)
 
 ## 系统要求
 
