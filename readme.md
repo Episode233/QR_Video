@@ -42,7 +42,7 @@
 
 ## 预览编码视频
 
-![gif](https://r2.episode.moe/lskypro/2025/02/17/67b294681d446.gif)
+![encoded.gif](https://r2.episode.moe/lskypro/2025/02/17/67b294681d446.gif)
 
 ## 系统要求
 
