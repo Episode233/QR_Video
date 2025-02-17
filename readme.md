@@ -43,7 +43,7 @@
 ## 预览编码结果
 
 1. 编码结果图片
-   ![encoded.png](/img/encoded.png)
+   <img src="/img/encoded.png" alt="encoded.png" style="zoom: 33.4%;" />
 2. 编码结果视频
    ![encoded.gif](/img/encoded.gif)
 
