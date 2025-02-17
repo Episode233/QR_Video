@@ -32,17 +32,17 @@
 ## 源文件、编码文件对比
 
 1. txt文件
-   ![txt.png](https://r2.episode.moe/lskypro/2025/02/17/67b282720a41d.png)
+   ![txt.png](/img/txt.png)
 2. word文件
-   ![word.png](https://r2.episode.moe/lskypro/2025/02/17/67b2826f1d289.png)
+   ![word.png](/img/word.png)
 3. jpg文件
-   ![jpg.png](https://r2.episode.moe/lskypro/2025/02/17/67b2826ed3dba.png)
+   ![jpg.png](/img/jpg.png)
 4. pdf文件
-   ![pdf.png](https://r2.episode.moe/lskypro/2025/02/17/67b2826fc1f2d.png)
+   ![pdf.png](/img/pdf.png)
 
 ## 预览编码视频
 
-![encoded.gif](https://r2.episode.moe/lskypro/2025/02/17/67b294681d446.gif)
+![encoded.gif](/img/encoded.gif)
 
 ## 系统要求
 
