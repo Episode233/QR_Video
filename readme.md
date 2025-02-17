@@ -40,6 +40,10 @@
 4. pdf文件
    ![pdf.png](https://r2.episode.moe/lskypro/2025/02/17/67b2826fc1f2d.png)
 
+## 预览编码视频
+
+![gif](https://r2.episode.moe/lskypro/2025/02/17/67b294681d446.gif)
+
 ## 系统要求
 
 - Python 3.8+
