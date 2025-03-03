@@ -116,7 +116,7 @@ python decode.decode.py
 ├── decode/           # 解码程序目录
 │   ├── decode.py       # 解码器入口
 │   └── module.py       # 解码器方法
-│   └── ui.py       	# 编码器界面
+│   └── ui.py       	# 解码器界面
 ├── qrcreate/         # 测试生成普通二维码
 ├── build.txt         # 构建exe程序命令
 └── requirements.txt  # 依赖环境
