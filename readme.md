@@ -1,6 +1,6 @@
 # QR_Video
 
-一个基于 CIMBAR (Color Icon Matrix Barcode) 的文件编解码工具，可以将文件编码为视频并从视频中解码还原文件。
+一个基于 [CIMBAR (Color Icon Matrix Barcode)](https://github.com/sz3/cimbar) 的文件编解码工具，可以将文件编码为视频并从视频中解码还原文件。
 
 ## 功能特点
 
