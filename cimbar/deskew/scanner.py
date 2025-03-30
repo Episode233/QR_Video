@@ -429,7 +429,7 @@ class CimbarScanner:
                 idx = 0
             return idx
 
-        print(f'sorting {candidates} in tl-tr-bl order.')
+        # print(f'sorting {candidates} in tl-tr-bl order.')
 
         # get edges
         cs = [
@@ -477,13 +477,13 @@ class CimbarScanner:
         # if duplicate candidates (e.g. within 10px or so), deduplicate
         t3_candidates = self.t3_scan_diagonal(t2_candidates)
         t4_candidates = self.t4_confirm_scan(t3_candidates)
-        print(candidates)
-        print(t2_candidates)
-        print(t3_candidates)
-        print(t4_candidates)
+        # print(candidates)
+        # print(t2_candidates)
+        # print(t3_candidates)
+        # print(t4_candidates)
 
         filtered_candidates, max_range = self.filter_candidates(t4_candidates)
-        print(f'filtered: {filtered_candidates}')
+        # print(f'filtered: {filtered_candidates}')
 
         candidates = self.sort_top_to_bottom(filtered_candidates)
         corners = self.add_fourth_corner(candidates, max_range)
@@ -501,7 +501,7 @@ class CimbarScanner:
         bottom_right_guess1 = anchors[2] + top_edge
         bottom_right_guess2 = anchors[1] + left_edge
         bottom_right_speculative = (bottom_right_guess1 + bottom_right_guess2) // 2
-        print(f'bottom right guess: {bottom_right_speculative}')
+        # print(f'bottom right guess: {bottom_right_speculative}')
 
         fourth = self.scan_fourth_corner(bottom_right_speculative, max_range, max_range)
         if fourth:
@@ -516,23 +516,23 @@ class CimbarScanner:
         end_x = int(center[0] + (xrange * uncertainty))
 
         skip = self.skip // 2
-        print(f'looking for 4th corner at {start_x}-{end_x},{start_y}-{end_y}. skip={skip}')
+        # print(f'looking for 4th corner at {start_x}-{end_x},{start_y}-{end_y}. skip={skip}')
 
         candidates = self.t1_scan_horizontal(skip=skip, start_y=start_y, end_y=end_y, r=(start_x, end_x))
-        print('4 candidates: {}'.format(candidates))
+        # print('4 candidates: {}'.format(candidates))
         t2_candidates = self.t2_scan_vertical(candidates)
-        print('4 t2 candidates: {}'.format(t2_candidates))
+        # print('4 t2 candidates: {}'.format(t2_candidates))
         candidates = [c for c in t2_candidates if c.xrange >= xrange / 2 and c.yrange >= yrange / 2]
         if not candidates:
             return None
 
         t3_candidates = self.t3_scan_diagonal(t2_candidates)
-        print('4 t3 candidates: {}'.format(t3_candidates))
+        # print('4 t3 candidates: {}'.format(t3_candidates))
         t4_candidates = self.t4_confirm_scan(t3_candidates, merge=False)
         t4_candidates.sort(key=lambda c: c.size)
 
 
-        print('4 t4 candidates: {}'.format(t4_candidates))
+        # print('4 t4 candidates: {}'.format(t4_candidates))
         c4 = t4_candidates[-1]
         if c4.xrange < (xrange / 2) or c4.yrange < (yrange / 2):
             return None

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import time
 from tempfile import TemporaryDirectory
 
 import cv2
@@ -27,7 +28,7 @@ def v2i(video_path):
             frame_count += 1
             image_list.append(frame)
 
-            print(str(frame_count)+"分割完毕")
+            # print(str(frame_count)+"分割完毕")
 
     cap.release()  # 释放视频捕获对象
     return image_list
@@ -188,6 +189,7 @@ def decode_list(image_list, outfold):
     sizew = int(iw * 0)
     sizeh = int(ih * 0)
     bounds = (sizeh, sizew, ih - sizeh, iw - sizew)
+    print(f"共识别{len(image_list)}帧，需解{8*len(image_list)}张码")
     for i in range(len(image_list)):
         # image = Image.open(image_path)
         image = image_list[i]
@@ -211,12 +213,16 @@ def decode_list(image_list, outfold):
                 # 保存numpy数组为图像文件
                 cv2.imwrite(temp_img_path, img)
                 # 解码临时文件
+                begin=time.time()
                 decoded_img = decode(temp_img_path)
+                end=time.time()
+                print(f"解第{i+1}张码耗时{end-begin:.4f}秒") # 目前大概1.178 /s
                 index = int(decoded_img[:8])
                 content = decoded_img[8:]
                 if index not in decoded_results:
                     decoded_results[index] = content
             except:
+                cv2.imwrite(outfold + "/test_{}.png".format(i), img)
                 continue
 
     return decoded_results

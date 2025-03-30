@@ -496,7 +496,7 @@ def _decode_symbols(ct, img):
                                               conf.CELL_DIM_Y, conf.CELLS_OFFSET, conf.MARKER_SIZE_X, conf.MARKER_SIZE_Y)
     finder = AdjacentCellFinder(cell_pos, num_edge_cells, conf.CELL_DIM_X, conf.MARKER_SIZE_X)
     decode_order = FloodDecodeOrder(cell_pos, finder)
-    print('beginning decode symbols pass...')
+    # print('beginning decode symbols pass...')
     for i, (x, y), drift in decode_order:
         best_bits, best_cell, best_dx, best_dy, best_distance = _decode_cell(ct, img, x, y, drift)
         decode_order.update(best_dx, best_dy, best_distance)
@@ -569,7 +569,7 @@ def _decode_iter(ct, img, color_img, state_info={}):
         print(color_lookups)
 
         _calc_ccm(ct, color_lookups, cc_setting, state_info)
-    print('beginning decode colors pass...')
+    # print('beginning decode colors pass...')
     midX = conf.TOTAL_SIZE // 2
     midY = conf.TOTAL_SIZE // 2
     for i, bits, cell in decoding:
