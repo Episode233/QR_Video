@@ -746,7 +746,7 @@ def encode_iter(src_data, ecc, fountain):
                     yield bits, x, y, frame_num
 
             frame_num += 1
-        print(f'encoded {frame_num} frames')
+        print(f'共编码 {frame_num} 张')
 
 
 def encode(src_data, dark=True, ecc=conf.ECC, fountain=False):
