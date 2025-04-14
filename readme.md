@@ -42,10 +42,14 @@
 
 ## 预览编码结果
 
-1. 编码结果图片
-   ![encoded.png](/img/encoded.png)
-2. 编码结果视频
-   ![encoded.gif](/img/encoded.gif)
+1. 4×2 编码结果图片
+   ![encoded.png](/img/encoded_42.png)
+2. 4×2 编码结果视频
+   ![encoded.gif](/img/encoded_42.gif)
+3. 2×1 编码结果图片
+   ![encoded.png](/img/encoded_21.png)
+4. 2×1 编码结果视频
+   ![encoded.gif](/img/encoded_21.gif)
 
 ## 系统要求
 

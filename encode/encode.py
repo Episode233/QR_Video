@@ -28,12 +28,12 @@ class Encoder(QMainWindow, Ui_fileencoder):
             print(f"create_qrCode 执行时间: {end_time - start_time:.4f} 秒")
 
             start_time = time.time()
-            image8_list = pingjie(imagelist)
+            image2_list = pingjie(imagelist)
             end_time = time.time()
             print(f"pingjie 执行时间: {end_time - start_time:.4f} 秒")
 
             start_time = time.time()
-            img2vedio(image8_list, self.outputflod)
+            img2vedio(image2_list, self.outputflod)
             end_time = time.time()
             print(f"img2vedio 执行时间: {end_time - start_time:.4f} 秒")
 
