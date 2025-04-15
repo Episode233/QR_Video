@@ -126,7 +126,7 @@ def decode_list(image_list, outfold):
                 if index not in decoded_results:
                     decoded_results[index] = content
             except:
-                cv2.imwrite(outfold + "/test_{}.png".format(i), img)
+                # cv2.imwrite(outfold + "/test_{}.png".format(i), img)
                 continue
 
     return decoded_results
