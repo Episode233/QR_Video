@@ -120,7 +120,7 @@ def decode_list(image_list, outfold):
                 begin=time.time()
                 decoded_img = decode(temp_img_path)
                 end=time.time()
-                print(f"解第{i+1}张码耗时{end-begin:.4f}秒") # 目前大概 6 个/s
+                print(f"解第{i+1}张码耗时{end-begin:.4f}秒") # 目前大概 1.45 s/个
                 index = int(decoded_img[:8])
                 content = decoded_img[8:]
                 if index not in decoded_results:
