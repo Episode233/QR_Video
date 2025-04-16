@@ -1,86 +1,189 @@
 # -*- coding: utf-8 -*-
-import cv2, os
-import sys, time
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWidgets import QMainWindow
-from PyQt5.QtWidgets import QFileDialog
-from PyQt5.QtWidgets import QMessageBox
-from module import *
-from ui import Ui_filedecoder
+import time, multiprocessing, tempfile, os, cv2
+from cimbar.cimbar import decode
+from concurrent.futures import ProcessPoolExecutor
+from tempfile import TemporaryDirectory
+import numpy as np
 
 
-class Decoder(QMainWindow, Ui_filedecoder):
-    def __init__(self):
-        super(Decoder, self).__init__()
-        self.inputfile = None
-        self.outputflod = None
-        self.setupUi(self)
+def v2i(video_path):
+    image_list = []
 
-        self.decode_Button.clicked.connect(self.decode_programer)
-        self.choseinputfile_Button.clicked.connect(self.chose_inputfiler)
-        self.choseoutputfolder_Button.clicked.connect(self.chose_outputfloder)
+    # 创建视频捕获对象
+    cap = cv2.VideoCapture(video_path)
+    success = True  # 标志位，检查是否成功读取到视频帧
+    frame_count = 0
+    while success:
+        success, frame = cap.read()  # 读取下一帧
+        if success:
+            # 构造图像文件的保存路径
+            # image_path = os.path.join("output", '{}.png'.format(frame_count))
+            # cv2.imwrite(image_path, frame)  # 保存图像
+            frame_count += 1
+            image_list.append(frame)
 
-    def decode_programer(self):
-        if self.inputfile is not None and self.outputflod is not None:
-            start_time = time.time()
-            imagelist = v2i(self.inputfile)
-            end_time = time.time()
-            print(f"v2i 执行时间: {end_time - start_time:.4f} 秒")
+            # print(str(frame_count)+"分割完毕")
 
-            start_time = time.time()
-            bytes_dict = decode_list(imagelist, self.outputflod)
-            end_time = time.time()
-            print(f"decode_list 执行时间: {end_time - start_time:.4f} 秒")
-
-            start_time = time.time()
-            write_file(bytes_dict, self.outputflod, 0)
-            end_time = time.time()
-            print(f"write_file 执行时间: {end_time - start_time:.4f} 秒")
-
-            QMessageBox.about(self, "消息提示", "解码完成")
-        else:
-            QMessageBox.about(self, "消息提示", "文件或文件夹选择失败,请重新选择")
-
-    def chose_inputfiler(self):
-        open_filename = QFileDialog.getOpenFileName(None, '选择文件', '', 'All files(*.*)')
-        str = ""
-        if open_filename[0] != '':
-            if self.outputflod is not None:
-                str += "输入路径： " + open_filename[0] + "\n"
-                str += "输出路径： " + self.outputflod
-                self.plainTextEdit.setPlainText(str)
-                self.inputfile = open_filename[0]
-                QMessageBox.about(self, "消息提示", "选择成功,请开始解码")
-            else:
-                str += "输入路径： " + open_filename[0] + "\n"
-                self.plainTextEdit.setPlainText(str)
-                self.inputfile = open_filename[0]
-                QMessageBox.about(self, "消息提示", "选择成功,请选择输出文件夹")
-        else:
-            QMessageBox.about(self, "消息提示", "选择失败,请重新选择")
-
-    def chose_outputfloder(self):
-        str_path = QFileDialog.getExistingDirectory(None, "选取文件夹", "")
-        str = ""
-        if str_path is not None:
-            if self.inputfile is not None:
-                str = "输入路径： " + self.inputfile + "\n"
-                str += "输出路径： " + str_path
-                self.plainTextEdit.setPlainText(str)
-                self.outputflod = str_path
-                QMessageBox.about(self, "消息提示", "选择成功,请开始解码")
-            else:
-                str = str_path
-                self.plainTextEdit.setPlainText(str)
-                self.outputflod = str_path
-                QMessageBox.about(self, "消息提示", "选择成功,请选择输入文件")
+    cap.release()  # 释放视频捕获对象
+    return image_list
 
 
-        else:
-            QMessageBox.about(self, "消息提示", "选择失败,请重新选择")
+def find_purple_bounds(image):
+    """
+    寻找图片中紫色区域的最左上和最右下的像素点。
+    """
+    left, top, right, bottom = image.width, image.height, -1, -1
+    found_purple = False
+    purple_color = np.array([[100, 0, 100], [180, 60, 180]])
+    for x in range(image.width):
+        for y in range(image.height):
+            rgb = image.getpixel((x, y))
+
+            if (purple_color[0][0] <= rgb[0] and rgb[0] <= purple_color[1][0] and purple_color[0][1] <= rgb[1] and rgb[
+                1] <= purple_color[1][1] and purple_color[0][2] <= rgb[2] and rgb[2] <= purple_color[1][2]):
+                if not found_purple:
+                    left, top = x, y
+                    found_purple = True
+                right, bottom = max(right, x), max(bottom, y)
+    width, height = image.size
+    top_left = (width, height)
+    bottom_right = (0, 0)
+    target_range = [(120, 0, 120), (140, 20, 140)]
+    for x in range(width):
+        for y in range(height):
+            pixel_value = image.getpixel((x, y))
+            if all(target_range[0][i] <= pixel_value[i] <= target_range[1][i] for i in range(3)):
+                top_left = (min(top_left[0], x), min(top_left[1], y))
+                bottom_right = (max(bottom_right[0], x), max(bottom_right[1], y))
+
+    if found_purple:
+        return left, top, right, bottom
+
+    else:
+        return None
 
 
-app = QApplication(sys.argv)
-decoder = Decoder()
-decoder.show()
-sys.exit(app.exec_())
+def split_image(image, rows=1, cols=2):
+    """
+    将图片分割成指定数量的块。
+    """
+    if image is None:
+        return []
+
+    height, width, _ = (image.shape)
+    row_height = height // rows
+    col_width = width // cols
+    return [image[i * row_height:(i + 1) * row_height, j * col_width: (j + 1) * col_width, :] for i in range(rows) for j
+            in range(cols)]
+
+
+def process_single_image(args):
+    """Process a single image in a separate process"""
+    i, img, temp_dir = args
+    temp_img_path = None
+    try:
+        # Create a unique temp file
+        fd, temp_img_path = tempfile.mkstemp(suffix='.png', dir=temp_dir)
+        os.close(fd)  # Close the file descriptor
+
+        # Save the image
+        cv2.imwrite(temp_img_path, img)
+
+        begin = time.time()
+        # Perform decoding
+        decoded_img = decode(temp_img_path)
+        end = time.time()
+
+        print(f"解第{i + 1}张码耗时{end - begin:.4f}秒")
+
+        # Clean up the temp file immediately after use
+        if os.path.exists(temp_img_path):
+            os.unlink(temp_img_path)
+
+        if decoded_img:
+            # Extract index and content
+            index = int(decoded_img[:8])
+            content = decoded_img[8:]
+            return (index, content)
+
+        return None
+    except Exception as e:
+        print(f"处理图像 {i + 1} 时跳过: 空白码无需解码")
+        # Ensure cleanup even in case of error
+        if temp_img_path and os.path.exists(temp_img_path):
+            try:
+                os.unlink(temp_img_path)
+            except:
+                pass
+        return None
+
+
+def decode_list(image_list, outfold):
+    """
+    使用多进程并行解码图像列表，自动设置进程数和清理临时文件
+    """
+    decoded_results = {}
+    ih, iw, _ = image_list[0].shape
+    sizew = int(iw * 0)
+    sizeh = int(ih * 0)
+    bounds = (sizeh, sizew, ih - sizeh, iw - sizew)
+
+    # 计算图像总数
+    total_images = len(image_list) * 2
+    print(f"共识别{len(image_list)}帧，需解{total_images}张码")
+
+    # 处理图像分割
+    decoded_list = []
+    for i in range(len(image_list)):
+        image = image_list[i]
+        if bounds == None:
+            bounds = find_purple_bounds(image)
+
+        if bounds:
+            y0, x0, y1, x1 = bounds
+            purple_area = image[y0:y1, x0:x1, :]
+            split_images = split_image(purple_area)
+            decoded_list.extend(split_images)
+
+    # 自动确定最佳进程数
+    # 1. 获取CPU核心数
+    cpu_count = multiprocessing.cpu_count()
+    # 2. 考虑系统负载，留出1个核心给系统
+    available_cores = max(1, cpu_count - 1)
+    # 3. 根据任务数量和可用核心数选择合适的进程数
+    num_processes = min(available_cores, len(decoded_list))
+
+    print(f"系统检测到 {cpu_count} 个CPU核心，将使用 {num_processes} 个进程进行并行解码")
+
+    # 创建一个临时目录
+    with TemporaryDirectory() as temp_dir:
+        # 准备参数列表
+        task_args = [(i, img, temp_dir) for i, img in enumerate(decoded_list)]
+
+        # 使用进程池执行解码任务
+        with ProcessPoolExecutor(max_workers=num_processes) as executor:
+            # 提交所有任务并收集结果
+            results = list(executor.map(process_single_image, task_args))
+
+            # 处理结果
+            for result in results:
+                if result:
+                    index, content = result
+                    if index not in decoded_results:
+                        decoded_results[index] = content
+
+    # TemporaryDirectory 上下文管理器会自动清理临时目录
+    return decoded_results
+
+
+def write_file(bytes_dict, output_folder, fd):
+    result = bytes()
+    for i in range(len(bytes_dict)):
+        result += bytes_dict[i]
+    filetype = result[:4].decode('utf-8').lstrip('0')
+    padding = int(result[4:8].decode('utf-8'))
+    content = result[8:len(result) - padding]
+
+    file_path = os.path.join(output_folder, f"file.{filetype}")
+    with open(file_path, "wb") as f:
+        f.write(content)
