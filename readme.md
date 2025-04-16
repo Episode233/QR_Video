@@ -191,7 +191,7 @@ python decode.decode.py
 
 ## License
 
-MIT License
+AGPL-3.0 license
 
 ## 贡献指南
 
