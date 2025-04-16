@@ -93,7 +93,7 @@ def img2vedio(image_list, video_path):
 
     # 定义视频编码器和创建VideoWriter对象
     fourcc = cv2.VideoWriter_fourcc(*'DIVX')  # 使用DIVX编码器
-    video = cv2.VideoWriter(video_path, fourcc, 10, (width, height))
+    video = cv2.VideoWriter(video_path, fourcc, 30, (width, height))
     new_imagelist = []
     for image in image_list:
         new_imagelist.append(cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR))
