@@ -226,4 +226,4 @@ MIT License
 
 ## 联系方式
 
-如有问题，请通过 GitHub Issues 提交
+如有问题，请通过 GitHub Issues 或 admin@episode.moe 提交
