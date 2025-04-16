@@ -33,7 +33,7 @@ class sq8x8:
     CELL_DIM_X = 52
     CELLS_OFFSET = 8
     # ECC = 30
-    ECC = 10
+    ECC = 5
     # ECC_BLOCK_SIZE = 155
     ECC_BLOCK_SIZE = 32
     INTERLEAVE_PARTITIONS = 2

@@ -109,7 +109,7 @@ def process_single_image(args):
 
         return None
     except Exception as e:
-        print(f"处理图像 {i + 1} 时出错: {str(e)}")
+        print(f"处理图像 {i + 1} 时跳过: 无需解码空白码")
         # Ensure cleanup even in case of error
         if temp_img_path and os.path.exists(temp_img_path):
             try:
