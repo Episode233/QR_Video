@@ -1,21 +1,10 @@
-import datetime
-import random
-import shutil
-import numpy as np
-import base64
-import math
+import numpy as np, qrcode, cv2
+from PIL import Image
+from cimbar.cimbar import encode
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
-import qrcode
-
-import os
-from pathlib import Path
-import cv2
-from PIL import Image
-from concurrent.futures import ProcessPoolExecutor
-from cimbar.cimbar import encode
 
 chunk_size = 30 * 30
 outPath = 'outPut'
@@ -28,10 +17,10 @@ qrMaxSizeDic = {
 }
 
 
-
 def create_qrCode(filePath):
     imagelist = encode(filePath)
     return imagelist
+
 
 def pingjie(imagelist):
     # 大图片尺寸
@@ -101,10 +90,6 @@ def img2vedio(image_list, video_path):
         video.write(new_imagelist[0])
     for image in new_imagelist[:]:
         video.write(image)
-    # for i in range(10):
-    #     video.write(new_imagelist[0])
-    # for image in new_imagelist[:]:
-    #     video.write(image)
 
     cv2.destroyAllWindows()
     video.release()

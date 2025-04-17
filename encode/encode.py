@@ -78,8 +78,12 @@ class Encoder(QMainWindow, Ui_fileencoder):
         else:
             QMessageBox.about(self, "消息提示", "选择失败,请重新选择")
 
+if __name__ == '__main__':
+    import multiprocessing
 
-app = QApplication(sys.argv)
-encoder = Encoder()
-encoder.show()
-sys.exit(app.exec_())
+    multiprocessing.set_start_method('spawn')  # 强制使用spawn方式
+
+    app = QApplication(sys.argv)
+    encoder = Encoder()
+    encoder.show()
+    sys.exit(app.exec_())
