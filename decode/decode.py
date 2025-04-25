@@ -82,6 +82,7 @@ class Decoder(QMainWindow, Ui_filedecoder):
 if __name__ == '__main__':
     import multiprocessing
 
+    multiprocessing.freeze_support()
     multiprocessing.set_start_method('spawn')  # 强制使用spawn方式
 
     app = QApplication(sys.argv)
