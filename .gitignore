@@ -13,3 +13,4 @@ qrcreate/dist/
 qrcreate/qrgenter.spec
 
 */__pycache__/
+.cursorrules
