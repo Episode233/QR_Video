@@ -26,24 +26,24 @@ def pingjie(imagelist):
     # 大图片尺寸
     big_image_size = (3840, 2160)
     # 每块大小
-    # block_width = big_image_size[0] // 4
     block_width = big_image_size[0] // 2
-    # block_height = big_image_size[1] // 2
     block_height = big_image_size[1]
     block_size = (block_width, block_height)
     # 小二维码尺寸
-    # small_qr_size = (800, 800)
     small_qr_size = (1800, 1800)
     image_number = 2  # 一张图填充个数
     # 创建紫色填充图像
     purple_color = (128, 0, 128)
-    # purple_color = (66, 172, 176) # 66 172 176
     # 遍历文件夹内的图片
     num = len(imagelist)
     imagelist_2 = []
 
-    count = 0
-    for i in range(0, num // 2 + 1):
+    # 使用ThreadPoolExecutor而不是多进程
+    from concurrent.futures import ThreadPoolExecutor
+    import gc
+
+    # 定义处理单个图像的函数
+    def process_image(i):
         # 创建大图片
         big_image = Image.new('RGB', big_image_size, purple_color)
 
@@ -56,9 +56,7 @@ def pingjie(imagelist):
             small_qr = small_qr.resize(small_qr_size)
 
             # 计算放置位置
-            # left = (j % 4) * block_width
             left = j * block_width
-            # top = (j // 4) * block_height
             top = 0
 
             # 计算二维码在紫色底片中的居中位置
@@ -68,9 +66,28 @@ def pingjie(imagelist):
             # 将二维码居中放置在紫色底片中
             big_image.paste(small_qr, (left + x_offset, top + y_offset))
 
-        # 保存带二维码的大图片到文件夹B
-        imagelist_2.append(big_image)
-        count += 1
+        return big_image
+
+    # 获取CPU核心数
+    import multiprocessing
+    cpu_count = multiprocessing.cpu_count()
+    # 限制使用的核心数，预留一个核心给系统
+    cpu_count = max(1, cpu_count - 1)
+
+    # 使用线程池处理图像
+    with ThreadPoolExecutor(max_workers=cpu_count) as executor:
+        # 处理每一组图像
+        futures = [executor.submit(process_image, i) for i in range(0, num // 2 + 1)]
+
+        # 收集结果
+        for future in futures:
+            result = future.result()
+            if result:
+                imagelist_2.append(result)
+
+    # 强制进行垃圾回收
+    gc.collect()
+
     return imagelist_2
 
 

@@ -32,6 +32,11 @@ class Encoder(QMainWindow, Ui_fileencoder):
             end_time = time.time()
             print(f"pingjie 执行时间: {end_time - start_time:.4f} 秒")
 
+            # 释放原始图像列表内存
+            import gc
+            del imagelist
+            gc.collect()
+
             start_time = time.time()
             img2vedio(image2_list, self.outputflod)
             end_time = time.time()

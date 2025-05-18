@@ -750,19 +750,43 @@ def encode_iter(src_data, ecc, fountain):
 
 
 def encode(src_data, dark=True, ecc=conf.ECC, fountain=False):
+    """
+    优化后的encode函数，专注于内存管理
+    """
+    import gc
+
+    imagelist = []
     img = None
     frame = None
-    imagelist = []
+
     ct = CimbEncoder(dark, symbol_bits=conf.BITS_PER_SYMBOL, color_bits=BITS_PER_COLOR)
+
+    # 为了减少内存使用，我们按帧处理
     for bits, x, y, frame_num in encode_iter(src_data, ecc, fountain):
-        if frame != frame_num:  # save
+        if frame != frame_num:  # 新帧
             if img is not None:
                 imagelist.append(img)
+
+                # 每添加5个图像到列表后进行垃圾回收
+                if len(imagelist) % 5 == 0:
+                    gc.collect()
+
             img = _get_image_template(conf.TOTAL_SIZE, dark)
             frame = frame_num
+
         encoded = ct.encode(bits)
         img.paste(encoded, (x, y))
-    imagelist.append(img)
+
+        # 释放encoded的内存
+        del encoded
+
+    # 添加最后一帧
+    if img is not None:
+        imagelist.append(img)
+
+    # 最后进行一次垃圾回收
+    gc.collect()
+
     return imagelist
 
 
